@@ -1,0 +1,207 @@
+<aura:component controller="AA_AgentAppService" implements="force:appHostable,flexipage:availableForAllPageTypes">
+    <ltng:require styles="/resource/Lightning_designing_style/assets/fonts/" />
+    <ltng:require styles="/resource/Lightning_designing_style/assets/fonts/webfonts" />
+    <ltng:require styles="/resource/Lightning_designing_style/assets/styles/salesforce-lightning-design-system.min.css" />
+    <ltng:require scripts="/resource/AA_Agent_LightningAppStatic/libs/jquery-3.0.0.min.js"  afterScriptsLoaded="{!c.checkBusinessPrinciple}"/>
+     <ltng:require scripts="{!$Resource.ga + '/js/analytics.js'}" />
+    
+    <c:AA_CommonComponent />
+    <aura:attribute name="filterType" type="String" default="AllReports"/>
+    <aura:attribute name="sortType" type="String" default="ShowLatestFirst"/>
+    <aura:attribute name="filterTypeLabel" type="String" />
+    <aura:attribute name="limitRecords" type="Integer" default="12"/>
+    <aura:attribute name="offSet" type="Integer" default="0"/>
+    <aura:attribute name="applyFilter" type="String" default="false"/>
+    <aura:attribute name="countryId" type="String" default="null"/>
+    <aura:attribute name="clusterId" type="String" default="null"/>
+    <aura:attribute name="unileverBrandId" type="String" default="null"/>
+    <aura:attribute name="retailerId" type="String" default="null"/>
+    <aura:attribute name="reportingOnId" type="String" default="null"/>
+    <aura:attribute name="recordType" type="String" default="null"/>
+    <aura:attribute name="competitorBrandId" type="String" default="null"/>
+    <aura:attribute name="competitorId" type="String" default="null"/>
+    <aura:attribute name="categoryId" type="String" default="null"/>
+    <aura:attribute name="topicId" type="String" default="null"/>
+    <aura:attribute name="subTopic" type="String" default="null"/>
+    <aura:attribute name="filterName" type="String"/>
+    <aura:attribute name="filterId" type="String"/>
+    <aura:attribute name="objAgentAppDataResponse" type="AA_WrapperClass.AgentAppDataResponse" description="Agent app report list get stored here" />
+    <aura:attribute name="objPassAgentReportsToNG" type="AA_WrapperClass.agentReportDetail" />
+    <aura:attribute name="totalReportCount" type="Integer" />
+    <aura:attribute name="businessPrincipleFlag" type="Boolean" description="Initialize terms and condition accepted or not"/>
+    <aura:attribute name="showLandingPageFlag" type="Boolean" default="false"  description="Initialize Landing page"/>
+    <!--new code -->
+    <aura:attribute name="fromDate" type="Date" />
+    <aura:attribute name="toDate" type="Date" />
+    
+    <!--new code checkbox -->
+    <aura:attribute name="checkvalue" type="Boolean" default="false"/>
+    
+    <!--new code -->
+    <aura:attribute name="searchKey" type="String"/>
+    <aura:attribute name="getAgentBaseUrl" type="String"/>
+	
+    <!--<aura:handler name="init" value="{!this}" action="{!c.checkBusinessPrinciple}" />  -->
+    <aura:handler name="businessPrincipleEvent" event="c:AA_BusinessPrincipleEvent" action="{!c.handleBusinessPrincipleEvent}"/>
+    
+    <!--<aura:handler event="c:AA_FilterEvent" action="{!c.getDetail}" />-->
+    <!--winter 17' critical update issue -->
+    <aura:handler name="FilterEventName" event="c:AA_FilterEvent" action="{!c.getDetail}"/>
+    <aura:handler name="navigateToPageDetailEvent" event="c:AA_NavigateToPageDetail" action="{!c.getForm}"/>
+    <!-- <aura:handler event="c:AA_NavigateToPageDetail" action="{!c.getForm}" />-->
+    <aura:handler event="c:AA_NavigateToLandingPageEvent" name="LandingPageEventFeedBack"  action="{!c.getshowPage}" />
+    <aura:handler event="aura:waiting" action="{!c.showSpinner}"/>
+    <aura:handler event="aura:doneWaiting" action="{!c.hideSpinner}"/>
+    
+     <aura:attribute name="show" type="Boolean" />
+    <aura:attribute name="message" type="String" />
+    <!--new code for weekly,monthly report-->
+     <aura:attribute name="weekly" type="boolean" default="false"/>
+    <aura:attribute name="monthly" type="boolean" default="false"/>
+    <aura:attribute name="choose" type="boolean" default="false"/>
+    <style>
+        body{
+        font: 100%/1.5 "Salesforce Sans",Arial,sans-serif;
+        }
+        .spinner {
+        background: none !important;
+        width: 86px;
+        }
+        .uiInput--default input, input.uiInput--default, .uiInput--default textarea, textarea.uiInput--default, .uiInput--select select:not([multiple]), select.uiInput--select:not([multiple]) {
+        font-family: Salesforce Sans !important;
+        }
+        ::-webkit-input-placeholder { /* Chrome/Opera/Safari */
+        font-weight: 400;
+        font-size: 1rem;
+        
+        }
+        ::-moz-placeholder { /* Firefox 19+ */
+        font-weight: 400;
+        font-size: 1rem;
+        
+        }
+        :-ms-input-placeholder { /* IE 10+ */
+        font-weight: 400;
+        font-size: 1rem;
+        
+        }
+        :-moz-placeholder { /* Firefox 18- */
+        font-weight: 400;
+        font-size: 1rem;
+        
+        }
+        .slds-form-element__label {
+        font-size: 1rem !important;
+        }
+        .slds-button{
+        font-size: 4.2vw;
+        }
+        @media screen and (min-width:768px){
+        .slds-button{
+        font-size: 1rem;
+        
+        }
+        }
+        @media only screen and (min-width: 768px) {
+        .summer{
+        padding-bottom: 10px;
+        max-width: 1200px;
+        margin: 0 auto;
+        background-color: white;
+        }
+        
+        .logo {
+        margin-left: 190px !important;
+        
+        }
+        .bPageHeader   {
+        font-size: 75% !important;
+        }     
+        .sidebarCollapsible{
+        font-size: 75% !important;
+        }
+        .filterName button{
+        height:30px;
+        }
+        
+        }
+        
+        .message{     
+        text-align: center;
+        padding-bottom: 0px;
+        padding-top: 0px;
+        max-width: 1200px;
+        margin: 0 auto;
+        
+        }
+        .removee{
+        display: none;
+        }
+        @media only screen and (max-width: 768px) {
+        .slds-theme--info {
+        color: rgb(255, 255, 255);
+        background-color: rgba(84, 105, 141, 0.95);
+        margin-top: -5900px;
+        }
+        .close{
+        float: right;
+        width: 8% !important;
+        margin-top: -160px !important;
+        margin-right: -20px !important;
+        }
+        }
+        
+        .close{
+        float: right;
+        width: 5%;
+        margin-top: -115px;
+        margin-right: -20px;
+        }
+        .theme{
+        color: rgb(255, 255, 255);
+        background-color: rgba(84, 105, 141, 0.95);
+        }
+        
+        @media only screen and (max-width: 768px) {
+        .theme2{
+         margin-top: -2800px !important;
+        }
+        }
+        
+        
+    </style>
+    <aura:if isTrue="{!(v.show &amp;&amp; v.showLandingPageFlag)}">
+	<div>
+            <div aria-hidden="false" role="dialog" class="slds-modal slds-modal--prompt slds-fade-in-open" aura:id="remove">
+                <div class="slds-modal__container slds-modal--prompt theme2" >
+                    <div class="slds-box theme">                        
+                        <div style="font-size: 1rem;">{!v.message}</div>
+                        <img class="close" src="/resource/Lightning_designing_style/assets/icons/utility/close.svg" onclick="{!c.close}">
+                        </img>
+                    </div>
+                </div>
+            </div>
+        <div aura:id="rem" class="slds-backdrop slds-backdrop--open"></div>
+    </div>
+        </aura:if>
+    <div aura:id="baseComponentContainer"/> <!-- sanju new code-->
+    <div class="container">
+        <div class="spinner-location"><ui:spinner aura:id="spinner" /></div>
+        <!--sanju new code  <div aura:id="baseComponentContainer">
+            <aura:if isTrue="{!v.businessPrincipleFlag == true}">
+                <aura:if isTrue="{!v.showLandingPageFlag == false}">
+                    <c:AA_AgentBaseFeedBackComponent />
+                </aura:if>
+                <aura:if isTrue="{!v.showLandingPageFlag == true}">
+                    <c:AA_LandingPageComponent objPassAgentReportsToNG="{!v.objPassAgentReportsToNG}" objAgentAppDataResponse="{!v.objAgentAppDataResponse}" limitRecords="{!v.limitRecords}" offSet="{!v.offSet}" filterType="{!v.filterType}" sortType="{!v.sortType}" applyFilter="{!v.applyFilter}"/>
+                </aura:if>
+            </aura:if>
+            <aura:if isTrue="{!v.businessPrincipleFlag == false}">
+                <c:AA_BusinessPrincipleComponent />
+            </aura:if> 
+        </div> end -->
+    </div>
+	<iframe id="frmTrigger" height="0" 
+                                style="border:none"
+                                src="{!v.getAgentBaseUrl +'/apex/GAPage'}"/>
+</aura:component>
